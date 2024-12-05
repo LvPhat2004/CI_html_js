@@ -1159,7 +1159,7 @@ class Game {
                         endX = centerX + Math.cos(angle) * chicken.currentLaserLength;
                         endY = centerY + Math.sin(angle) * chicken.currentLaserLength;
                         
-                        // Kiểm tra va chạm bằng cách tính khoảng cách từ player đến đường thẳng laser
+                        // Kiểm tra va chạm b���ng cách tính khoảng cách từ player đến đường thẳng laser
                         const playerCenterX = this.player.x + this.player.width/2;
                         const playerCenterY = this.player.y + this.player.height/2;
                         
@@ -2316,6 +2316,47 @@ class Game {
             }
         });
         this.chickens = []; // Xóa tất cả gà
+
+        // Thêm timeout để đợi hiệu ứng nổ hoàn thành
+        setTimeout(() => {
+            // Kiểm tra và chuyển màn
+            const currentLevel = LEVELS[this.currentLevel - 1];
+            if (!currentLevel || !currentLevel.waves) {
+                console.error('Invalid level data');
+                return;
+            }
+            
+            if (this.currentWave < currentLevel.waves.length - 1) {
+                // Còn wave tiếp theo trong level hiện tại
+                this.currentWave++;
+                this.levelTransitioning = true;
+                
+                // Hiển thị thông báo hoàn thành wave
+                this.showNotification(MESSAGES.waveComplete);
+                
+                setTimeout(() => {
+                    this.initWave();
+                    this.levelTransitioning = false;
+                }, 2000);
+            } else {
+                // Đã hoàn thành tất cả wave trong level
+                this.levelTransitioning = true;
+                console.log('Level complete, transitioning to next level');
+                this.showNotification(MESSAGES.levelComplete(currentLevel));
+                
+                setTimeout(() => {
+                    this.currentLevel++;
+                    if (this.currentLevel <= LEVELS.length) {
+                        this.initLevel();
+                        this.showNotification(MESSAGES.levelStart(LEVELS[this.currentLevel - 1]));
+                    } else {
+                        this.showNotification(MESSAGES.gameComplete);
+                        this.gameOver = true;
+                    }
+                    this.levelTransitioning = false;
+                }, 2000);
+            }
+        }, 1000); // Đợi 1 giây cho hiệu ứng nổ
     }
 }
 
