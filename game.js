@@ -35,6 +35,10 @@ class Game {
             this.missileCount = 0;
             this.DRUMSTICKS_PER_MISSILE = 50;
             this.brokenEggs = [];
+            this.missileCooldown = 0;
+            this.MISSILE_COOLDOWN_TIME = 360; // 6 giây (60fps * 6)
+            this.missileEmptyCooldown = 0;    // Thêm cooldown cho thông báo không đủ tên lửa
+            this.MISSILE_EMPTY_COOLDOWN = 60;  // 1 giây cho thông báo không đủ tên lửa
         });
     }
 
@@ -196,19 +200,87 @@ class Game {
 
     bindEvents() {
         document.addEventListener('keydown', (e) => {
-            this.keys[e.code] = true;
-            if(e.code === 'Space' && this.gameOver) {
-                this.init();
-            }
-            // Thêm xử lý phím M để bắn tên lửa
-            if(e.code === 'KeyM' && this.missileCount > 0) {
-                this.launchMissile();
+            // Thêm WASD
+            switch(e.code) {
+                case 'KeyW':
+                case 'ArrowUp':
+                    this.keys['ArrowUp'] = true;
+                    break;
+                case 'KeyS':
+                case 'ArrowDown':
+                    this.keys['ArrowDown'] = true;
+                    break;
+                case 'KeyA':
+                case 'ArrowLeft':
+                    this.keys['ArrowLeft'] = true;
+                    break;
+                case 'KeyD':
+                case 'ArrowRight':
+                    this.keys['ArrowRight'] = true;
+                    break;
+                case 'Space':
+                    this.keys['Space'] = true;
+                    if(this.gameOver) {
+                        this.init();
+                    }
+                    break;
+                case 'KeyM':
+                    if (this.missileCount > 0 && this.missileCooldown <= 0) {
+                        this.launchMissile();
+                    } else if (this.missileEmptyCooldown <= 0) {
+                        this.showMissileEmpty();
+                    }
+                    break;
+                default:
+                    this.keys[e.code] = true;
             }
             e.preventDefault();
         });
         
         document.addEventListener('keyup', (e) => {
-            this.keys[e.code] = false;
+            // Thêm WASD
+            switch(e.code) {
+                case 'KeyW':
+                    this.keys['ArrowUp'] = false;
+                    break;
+                case 'KeyS':
+                    this.keys['ArrowDown'] = false;
+                    break;
+                case 'KeyA':
+                    this.keys['ArrowLeft'] = false;
+                    break;
+                case 'KeyD':
+                    this.keys['ArrowRight'] = false;
+                    break;
+                default:
+                    this.keys[e.code] = false;
+            }
+            e.preventDefault();
+        });
+
+        // Thêm điều khiển chuột
+        this.canvas.addEventListener('mousedown', (e) => {
+            if (e.button === 0) { // Chuột trái - bắn súng
+                this.keys['Space'] = true;
+            } else if (e.button === 2) { // Chuột phải - phóng tên lửa
+                if (this.missileCount > 0 && this.missileCooldown <= 0) {
+                    this.launchMissile();
+                } else if (this.missileEmptyCooldown <= 0) {
+                    this.showMissileEmpty();
+                }
+            }
+            e.preventDefault();
+        });
+
+        this.canvas.addEventListener('mouseup', (e) => {
+            if (e.button === 0) { // Chuột trái
+                this.keys['Space'] = false;
+            }
+            e.preventDefault();
+        });
+
+        // Ngăn menu chuột phải mặc định
+        this.canvas.addEventListener('contextmenu', (e) => {
             e.preventDefault();
         });
 
@@ -772,7 +844,7 @@ class Game {
                     // Nếu cùng loại thì tăng 1 level
                     this.player.weaponLevel = Math.min(this.player.weaponLevel + 1, this.player.maxWeaponLevel);
                 } else {
-                    // Nếu khác loại thì đổi loại
+                    // Nếu khác loại thì ��ổi loại
                     this.player.weaponType = giftBox.type;
                 }
                 this.giftBoxes.splice(index, 1);
@@ -787,7 +859,7 @@ class Game {
         // Trong phương thức update, thêm xử lý chuyển động cho gà loại 6
         this.chickens.forEach(chicken => {
             if (chicken.type.id === 6) {
-                // Khởi tạo các thuộc tính chuyển động nếu chưa có
+                // Khởi tạo các thu��c tính chuyển động nếu chưa có
                 if (!chicken.moveDirection) {
                     chicken.moveDirection = 1;
                     chicken.moveSpeed = 3;
@@ -876,6 +948,14 @@ class Game {
             if(this.player.respawnTimer <= 0) {
                 this.player.isInvincible = false;
             }
+        }
+
+        // Cập nhật cooldown tên lửa
+        if (this.missileCooldown > 0) {
+            this.missileCooldown--;
+        }
+        if (this.missileEmptyCooldown > 0) {
+            this.missileEmptyCooldown--;
         }
 
         // Cập nhật đùi gà
@@ -995,7 +1075,7 @@ class Game {
                                           this.images.giftBox3
                                 });
                             } 
-                            else if (randomValue < 0.8) { // 20% của 7.5% = 1.5% cơ hội đổi loại vũ khí
+                            else if (randomValue < 0.8) { // 20% của 7.5% = 1.5% cơ hội đổi loại v�� khí
                                 const otherTypes = ['normal', 'lightning', 'wave'].filter(t => t !== currentWeaponType);
                                 const newType = otherTypes[Math.floor(Math.random() * otherTypes.length)];
                                 this.giftBoxes.push({
@@ -2278,9 +2358,12 @@ class Game {
 
     // Thêm phương thức mới để xử lý bắn tên lửa
     launchMissile() {
-        if (this.missileCount <= 0) return;
-        
+        // Không cần kiểm tra missileCount và cooldown ở đây nữa
+        // vì đã kiểm tra trong bindEvents
         this.missileCount--;
+        this.missileCooldown = this.MISSILE_COOLDOWN_TIME;
+        this.showNotification(MESSAGES.missileLaunch);
+
         // Tạo một vụ nổ lớn tiêu diệt tất cả gà trong màn hình
         const centerX = this.canvas.width / 2;
         const centerY = this.canvas.height / 2;
@@ -2357,6 +2440,12 @@ class Game {
                 }, 2000);
             }
         }, 1000); // Đợi 1 giây cho hiệu ứng nổ
+    }
+
+    // Tách riêng phần hiển thị thông báo không đủ tên lửa
+    showMissileEmpty() {
+        this.showNotification(MESSAGES.missileEmpty);
+        this.missileEmptyCooldown = this.MISSILE_EMPTY_COOLDOWN;
     }
 }
 

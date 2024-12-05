@@ -458,5 +458,20 @@ export const MESSAGES = {
         subtitle: "Trái đất đã được cứu!",
         message: "Bạn đã đánh bại tất cả gà!",
         duration: 5000
+    },
+
+    // Thêm thông báo cho tên lửa
+    missileLaunch: {
+        title: "Kích Hoạt Tên Lửa!",
+        subtitle: "Tiêu Diệt Toàn Bộ!",
+        message: "Chờ 6 giây để phóng tiếp...",
+        duration: 1500
+    },
+
+    missileEmpty: {
+        title: "Không Đủ Tên Lửa!",
+        subtitle: "Thu Thập Thêm Đùi Gà",
+        message: "Cần 50 đùi gà cho 1 tên lửa",
+        duration: 1000
     }
 }; 
