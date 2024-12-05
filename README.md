@@ -2,6 +2,8 @@
 
 ## 📖 Giới thiệu
 Chicken Invaders là một game bắn gà không gian được phát triển bởi HartLow. Người chơi điều khiển một phi thuyền chiến đấu chống lại các đội quân gà xâm lược.
+![image](https://github.com/user-attachments/assets/7b59d54e-9831-46c2-941d-1bb336b31c81)
+![image](https://github.com/user-attachments/assets/9a77f6df-9ca3-4105-939d-1685d2cbf671)
 
 ## 🎮 Cách chơi
 - **Di chuyển**: Sử dụng các phím mũi tên (↑, ↓, ←, →) hoặc WASD
